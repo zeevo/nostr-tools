@@ -1,3 +1,4 @@
+import {Data} from 'ws'
 import type {Event} from './event.ts'
 
 export const utf8Decoder = new TextDecoder('utf-8')
@@ -111,13 +112,13 @@ export function insertEventIntoAscendingList(
 }
 
 export class MessageNode {
-  private _value: string
+  private _value: Data
   private _next: MessageNode | null
 
-  public get value(): string {
+  public get value(): Data {
     return this._value
   }
-  public set value(message: string) {
+  public set value(message: Data) {
     this._value = message
   }
   public get next(): MessageNode | null {
@@ -127,7 +128,7 @@ export class MessageNode {
     this._next = node
   }
 
-  constructor(message: string) {
+  constructor(message: Data) {
     this._value = message
     this._next = null
   }
@@ -162,7 +163,7 @@ export class MessageQueue {
     this._last = null
     this._size = 0
   }
-  enqueue(message: string): boolean {
+  enqueue(message: Data): boolean {
     const newNode = new MessageNode(message)
     if (this._size === 0 || !this._last) {
       this._first = newNode
@@ -174,7 +175,7 @@ export class MessageQueue {
     this._size++
     return true
   }
-  dequeue(): string | null {
+  dequeue(): Data | null {
     if (this._size === 0 || !this._first) return null
 
     let prev = this._first

@@ -1,9 +1,8 @@
-/* global WebSocket */
-
+import WebSocket from 'isomorphic-ws'
 import {verifySignature, validateEvent, type Event} from './event.ts'
 import {matchFilters, type Filter} from './filter.ts'
 import {getHex64, getSubscriptionId} from './fakejson.ts'
-import { MessageQueue } from './utils.ts'
+import {MessageQueue} from './utils.ts'
 
 type RelayEvent = {
   connect: () => void | Promise<void>
@@ -25,9 +24,18 @@ export type Relay = {
   status: number
   connect: () => Promise<void>
   close: () => void
-  sub: <K extends number = number>(filters: Filter<K>[], opts?: SubscriptionOptions) => Sub<K>
-  list: <K extends number = number>(filters: Filter<K>[], opts?: SubscriptionOptions) => Promise<Event<K>[]>
-  get: <K extends number = number>(filter: Filter<K>, opts?: SubscriptionOptions) => Promise<Event<K> | null>
+  sub: <K extends number = number>(
+    filters: Filter<K>[],
+    opts?: SubscriptionOptions
+  ) => Sub<K>
+  list: <K extends number = number>(
+    filters: Filter<K>[],
+    opts?: SubscriptionOptions
+  ) => Promise<Event<K>[]>
+  get: <K extends number = number>(
+    filter: Filter<K>,
+    opts?: SubscriptionOptions
+  ) => Promise<Event<K> | null>
   count: (
     filters: Filter[],
     opts?: SubscriptionOptions
@@ -48,7 +56,10 @@ export type Pub = {
   off: (type: 'ok' | 'failed', cb: any) => void
 }
 export type Sub<K extends number = number> = {
-  sub: <K extends number = number>(filters: Filter<K>[], opts: SubscriptionOptions) => Sub<K>
+  sub: <K extends number = number>(
+    filters: Filter<K>[],
+    opts: SubscriptionOptions
+  ) => Sub<K>
   unsub: () => void
   on: <T extends keyof SubEvent<K>, U extends SubEvent<K>[T]>(
     event: T,
@@ -140,10 +151,12 @@ export function relayInit(
           return
         }
 
-        var json = incomingMessageQueue.dequeue()
-        if (!json) return
+        var message = incomingMessageQueue.dequeue()
+        if (!message) return
 
-        let subid = getSubscriptionId(json)
+        const json = message.toString()
+
+        let subid = getSubscriptionId(message)
         if (subid) {
           let so = openSubs[subid]
           if (
@@ -156,7 +169,7 @@ export function relayInit(
         }
 
         try {
-          let data = JSON.parse(json)
+          const data = JSON.parse(json)
 
           // we won't do any checks against the data since all failures (i.e. invalid messages from relays)
           // will naturally be caught by the encompassing try..catch block
@@ -349,7 +362,7 @@ export function relayInit(
           clearTimeout(timeout)
           resolve(events)
         })
-        s.on('event', (event) => {
+        s.on('event', event => {
           events.push(event)
         })
       }),
@@ -360,7 +373,7 @@ export function relayInit(
           s.unsub()
           resolve(null)
         }, getTimeout)
-        s.on('event', (event) => {
+        s.on('event', event => {
           s.unsub()
           clearTimeout(timeout)
           resolve(event)
